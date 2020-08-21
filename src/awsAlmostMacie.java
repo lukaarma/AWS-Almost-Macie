@@ -1,8 +1,10 @@
-import javax.swing.JFileChooser;
-import java.nio.file.Path;
+import org.apache.tika.exception.TikaException;
+import org.xml.sax.SAXException;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Collections;
 
 
 public class awsAlmostMacie {
@@ -46,8 +48,19 @@ public class awsAlmostMacie {
             System.exit(1);
         }
 
-        for (Path path: lister.getFileList()) {
-            System.out.println(path);
+        FileParser parser = null;
+        try {
+            parser = new FileParser(lister.getFileList());
         }
+        catch (TikaException | IOException | SAXException e) {
+            e.printStackTrace();
+        }
+
+        assert parser != null;
+        parser.getParsedFileContentMap().forEach(
+                (path, content) -> System.out.println(path + "\n-----\n" + content + "\n-----\n"));
+        parser.getNoContentMimeTypesMap().forEach(
+                (path, mime) -> System.out.printf("%-120s -> %s\n", path, mime));
+        Collections.singletonList(parser.getAccessErrorArray()).forEach(System.out::println);
     }
 }
