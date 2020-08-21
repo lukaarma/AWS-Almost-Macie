@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 
 
+// FIXME: add empty folder check!!
 public class FileLister {
     private final Path rootPath;
     private final Path[] fileList;
