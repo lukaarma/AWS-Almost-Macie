@@ -3,8 +3,7 @@ import org.xml.sax.SAXException;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.Collections;
+import java.nio.file.Path;
 
 
 public class awsAlmostMacie {
@@ -12,6 +11,7 @@ public class awsAlmostMacie {
     public static void main(String[] args) {
         String rootPath = null;
         FileLister lister = null;
+        FileParser parser = null;
 
         // FIXME: remove temp path from generator
         // nasty bug, if there are drives or network resources not responding it hangs on startup
@@ -38,29 +38,30 @@ public class awsAlmostMacie {
             }
         }
 
-
+        // create recursive lister of files
         try {
+            System.out.println("Scanning root folder for all accessible files...\n");
             lister = new FileLister(rootPath);
         }
-        catch (IOException | UncheckedIOException e) {
-            System.out.printf("Access denied to '%s' ! \nExiting...\n\n",
-                              e.getMessage().split(" ", 2)[1]);
+        catch (EmptyFolderException e) {
+            System.out.println(e.getMessage());
             System.exit(1);
         }
 
-        FileParser parser = null;
+        // create parser of content to string
         try {
-            parser = new FileParser(lister.getFileList());
+            System.out.println("Scanning files for content and filetype...\n");
+            parser = new FileParser(lister.getFileList().toArray(Path[]::new));
         }
         catch (TikaException | IOException | SAXException e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
-        assert parser != null;
-        parser.getParsedFileContentMap().forEach(
-                (path, content) -> System.out.println(path + "\n-----\n" + content + "\n-----\n"));
-        parser.getNoContentMimeTypesMap().forEach(
-                (path, mime) -> System.out.printf("%-120s -> %s\n", path, mime));
-        Collections.singletonList(parser.getAccessErrorArray()).forEach(System.out::println);
+        parser.printMimeTypes();
+
+        // System.out.println(parser.getTextContentMap());
+        // System.out.println(parser.getImagesPathSet());
+
     }
 }
