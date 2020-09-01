@@ -30,7 +30,7 @@ public class FileLister {
         return rootPath;
     }
 
-
+    // FIXME: make this with iteration not recursive!!
     // I think this may overflow the jvm memory at some point
     // but the directory has to be so big that for now it will work
     private void listFiles(Path rootPath) {
