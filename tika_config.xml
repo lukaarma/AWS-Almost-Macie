@@ -1,3 +1,13 @@
 <properties>
+    <parsers>
+        <parser class="org.apache.tika.parser.DefaultParser">
+            <mime-exclude>image/jpeg</mime-exclude>
+            <mime-exclude>image/tiff</mime-exclude>
+            <mime-exclude>image/jpeg</mime-exclude>
+            <mime-exclude>image/gif</mime-exclude>
+            <mime-exclude>image/png</mime-exclude>
+            <mime-exclude>image/bmp</mime-exclude>
+        </parser>
+    </parsers>
     <service-loader initializableProblemHandler="IGNORE"/>
 </properties>
