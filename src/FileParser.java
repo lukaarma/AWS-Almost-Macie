@@ -13,12 +13,13 @@ import java.util.*;
 public class FileParser extends Tika {
     // filetypes parsed by Tesseract, see here (http://tess4j.sourceforge.net/)
     private final Set<MediaType> imagesMimeTypes = Set.of(
+            // disable pdf for now (need ghost4j ??)
+            // MediaType.parse("application/pdf")
             MediaType.parse("image/tiff"),
             MediaType.parse("image/jpeg"),
             MediaType.parse("image/gif"),
             MediaType.parse("image/png"),
-            MediaType.parse("image/bmp"),
-            MediaType.parse("application/pdf")
+            MediaType.parse("image/bmp")
     );
 
     /* these two contain all of the paths, including with no or empty content
@@ -96,7 +97,6 @@ public class FileParser extends Tika {
                 this.accessErrorArray.add(file);
                 // if we can't access the file we can't read the mimetype, so null and continue
                 this.parsedMimeTypesMap.put(file, null);
-                continue;
             }
 
             // now we get the mime type
@@ -146,11 +146,11 @@ public class FileParser extends Tika {
         }
 
         int finalMax = max + 1;
-        System.out.printf("%-" + finalMax + "s -> %s %s\n", "ABSOLUTE PATH", "HAS CONTENT", "MIMETYPE");
+        System.out.printf("%-" + finalMax + "s ->   %s   %s\n", "ABSOLUTE PATH", "HAS CONTENT", "MIMETYPE");
         this.parsedMimeTypesMap.forEach((path, mime) -> {
             String content = this.parsedFileContentMap.get(path);
             System.out.printf(
-                    "%-" + finalMax + "s -> %-11b %s\n",
+                    "%-" + finalMax + "s ->   %-11b   %s\n",
                     path,
                     (content != null && !content.isEmpty()),
                     mime
