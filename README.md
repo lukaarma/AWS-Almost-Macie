@@ -1,4 +1,4 @@
-FIxed ## SETUP
+## SETUP
 JARs needed in the lib folder:
 - [Apache Tika]
 - [Common CLI]
