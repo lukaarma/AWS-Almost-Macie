@@ -36,9 +36,9 @@ public class FileParser extends Tika {
     private final ArrayList<Path> accessErrorArray;
 
 
-    public FileParser(Path[] pathList) throws TikaException, IOException, SAXException {
+    public FileParser(Path[] pathList, String tikaConfigPath) throws TikaException, IOException, SAXException {
         // tika_config will suppress error at startup for missing parsers (not used)
-        super(new TikaConfig("tika_config.xml"));
+        super(new TikaConfig(tikaConfigPath));
 
         this.parsedFileContentMap = new HashMap<>();
         this.parsedMimeTypesMap = new HashMap<>();
@@ -54,14 +54,6 @@ public class FileParser extends Tika {
     }
 
 
-    public Map<Path, String> getParsedFileContentMap() {
-        return this.parsedFileContentMap;
-    }
-
-    public Map<Path, String> getParsedMimeTypesMap() {
-        return this.parsedMimeTypesMap;
-    }
-
     public ArrayList<Path> getAccessErrorArray() {
         return this.accessErrorArray;
     }
@@ -75,8 +67,6 @@ public class FileParser extends Tika {
     }
 
     private void parseFileContent(Path[] pathList) {
-        Map<Path, String> result = new HashMap<>();
-
         for (Path file : pathList) {
             String content;
             String mime;

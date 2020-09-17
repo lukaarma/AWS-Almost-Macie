@@ -16,7 +16,8 @@ public class awsAlmostMacie {
         Options options = new Options();
         CommandLineParser argvParser = new DefaultParser();
 
-        String configPath;
+        String analyzerConfigPath;
+        String tikaConfigPath;
         String rootPath = null;
         FileLister lister = null;
         FileParser parser = null;
@@ -26,14 +27,25 @@ public class awsAlmostMacie {
         System.out.println("\n__AWS(almost)Macie__\n");
 
         // Args parsing
-        Option triggersDict = new Option(
-                "f",
-                "filter",
+        Option analyzerConfigOption = new Option(
+                "c",
+                "config",
                 true,
-                "The json config file wth the trigger keywords");
-        triggersDict.setRequired(true);
-        options.addOption(triggersDict);
+                "The json config file wth the keywords to match"
+        );
+        analyzerConfigOption.setRequired(true);
+        Option tikaConfigOption = new Option(
+                "t",
+                "tikaConfig",
+                true,
+                "The xml config file for Tika"
+        );
+        tikaConfigOption.setRequired(true);
+
+        options.addOption(analyzerConfigOption);
+        options.addOption(tikaConfigOption);
         options.addOption("d", "debug", false, "Print debugging info");
+        options.addOption("n", "noTesseract", false, "Use only Tika parsing");
 
         try {
             argv = argvParser.parse(options, args);
@@ -44,10 +56,15 @@ public class awsAlmostMacie {
         }
         // Done parsing
 
-        // Error out if config does not exist
-        configPath = argv.getOptionValue('f');
-        if (!Files.exists(Path.of(configPath))) {
-            System.out.printf("The config file '%s' does not exist! Exiting... \n\n", configPath);
+        // Error out if configs does not exist
+        analyzerConfigPath = argv.getOptionValue('c');
+        tikaConfigPath = argv.getOptionValue('t');
+        if (!Files.exists(Path.of(analyzerConfigPath))) {
+            System.out.printf("The config file '%s' does not exist! Exiting... \n\n", analyzerConfigPath);
+            System.exit(1);
+        }
+        else if (!Files.exists(Path.of(tikaConfigPath))) {
+            System.out.printf("The config file '%s' does not exist! Exiting... \n\n", tikaConfigPath);
             System.exit(1);
         }
 
@@ -90,11 +107,27 @@ public class awsAlmostMacie {
         // create parser of content to string and filter out images/pdf for Tesseract
         try {
             System.out.println("Scanning files for content and filetype...\n");
-            parser = new FileParser(lister.getFileList().toArray(Path[]::new));
+            parser = new FileParser(lister.getFileList().toArray(Path[]::new), tikaConfigPath);
         }
-        // TODO: better handling
-        catch (TikaException | IOException | SAXException e) {
-            e.printStackTrace();
+        catch (TikaException e) {
+            if (argv.hasOption('d')) {
+                e.printStackTrace();
+            }
+            System.out.printf("Failed while initializing Tika with message '%s'! Exiting...", e.getMessage());
+            System.exit(1);
+        }
+        catch (IOException e) {
+            if (argv.hasOption('d')) {
+                e.printStackTrace();
+            }
+            System.out.printf("Couldn't read tika config '%s'! Exiting...", tikaConfigPath);
+            System.exit(1);
+        }
+        catch (SAXException e) {
+            if (argv.hasOption('d')) {
+                e.printStackTrace();
+            }
+            System.out.printf("Error while parsing tika config '%s'! Exiting...", tikaConfigPath);
             System.exit(1);
         }
 
@@ -109,11 +142,21 @@ public class awsAlmostMacie {
         }
 
         try {
-            analyzer = new ContentAnalyzer(configPath);
+            analyzer = new ContentAnalyzer(analyzerConfigPath);
         }
         // TODO: better handling
-        catch (IOException | org.json.simple.parser.ParseException e) {
-            e.printStackTrace();
+        catch (IOException e) {
+            if (argv.hasOption('d')) {
+                e.printStackTrace();
+            }
+            System.out.printf("Couldn't read analyzer config '%s'! Exiting...", analyzerConfigPath);
+            System.exit(1);
+        }
+        catch (org.json.simple.parser.ParseException e) {
+            if (argv.hasOption('d')) {
+                e.printStackTrace();
+            }
+            System.out.printf("Error while parsing config '%s' to JSON object! Exiting...", analyzerConfigPath);
             System.exit(1);
         }
 
@@ -124,9 +167,16 @@ public class awsAlmostMacie {
             System.out.println(Arrays.toString(analyzer.getWarnings()));
             System.out.println("<=====================================================>\n\n");
         }
-        System.out.println("Analyzing text files...\n");
-        analyzer.parseText(parser.getTextContentMap());
-        System.out.println("\n\nAnalyzing image files...\n");
-        analyzer.parseImages(parser.getImagesPathSet());
+
+        if (argv.hasOption('n')){
+            System.out.println("Analyzing text and images files...\n");
+            analyzer.parseText(parser.getTextContentMap());
+        }
+        else {
+            System.out.println("Analyzing text and images files...\n");
+            analyzer.parseText(parser.getTextContentMap());
+            System.out.println("\n\nAnalyzing image files...\n");
+            analyzer.parseImages(parser.getImagesPathSet());
+        }
     }
 }
