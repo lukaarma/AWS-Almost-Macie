@@ -51,7 +51,9 @@ public class awsAlmostMacie {
             argv = argvParser.parse(options, args);
         }
         catch (ParseException e) {
-            System.out.println( "Unexpected exception:" + e.getMessage());
+            System.out.println( "Unexpected exception: " + e.getMessage());
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "awsAlmostMacie", options );
             System.exit(1);
         }
         // Done parsing
