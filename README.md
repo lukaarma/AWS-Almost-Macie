@@ -1,5 +1,5 @@
 ## SETUP
-JARs needed in the lib folder:
+Create lib folder in the root of the project and inside put these JARs:
 - [Apache Tika]
 - [Common CLI]
 - [Tess4J]
